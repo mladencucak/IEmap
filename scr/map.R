@@ -54,6 +54,7 @@ df_loc %>%
   geom_point( aes(x = long, y = lat, fill = colstna, color = colstna, alpha = 0.8), size = 2.3, shape = 17) +
   guides(fill=FALSE, alpha=FALSE, size=FALSE) +
   scale_color_manual(name = "Data:", values = c( "blue","black"))+
+  labs(x = "Longitude", y = "Latitude")+
   ggrepel::geom_text_repel(aes(x = c(long), y = c(lat), label = lab),size = 2.5)+ 
   # annotate("text",x = c(df_loc$long), y = c(df_loc$lat-0.05), label = df_loc$stna, size = 2)+
   # ggthemes::theme_map()+
