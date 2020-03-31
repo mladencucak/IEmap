@@ -10,7 +10,8 @@ list.of.packages <-
     "here",
     "ggthemes",
     "ggrepel",
-    "sf"
+    "sf",
+    "ggspatial"
   )
 
 new.packages <-
@@ -39,15 +40,13 @@ rm(packages_load, list.of.packages, new.packages)
 #Mapping
 #####################################################
 
+load(here::here("dat", "All_Ireland.RData"))#shape file for irish counties
 
-library("ggspatial")
-
-
-load(here::here("dat", "All_Ireland.RData"))
-
+#file with locations found in dat folder, This file could be modified to suit other needs
 df_loc <- 
   read.csv( here::here("dat", "stations_final.csv"))
 
+#Convert to simple features object
 df_loc_sf <- 
   df_loc %>% 
   mutate(colstna = ifelse(stna %in% c("Oak Park", "Dunsany", "Moore Park", "Johnstown", "Gurteen"), "Observed", "Observed and forecasted" )) %>%  
@@ -58,50 +57,112 @@ df_loc_sf <-
 st_crs(df_loc_sf) <- 
   st_crs(all_counties.sf)
 
+basemap <- 
+ggplot() +
+  geom_sf(
+    data = 
+      all_counties.sf[all_counties.sf$CountyName  != c("Tyrone","Antrim","Armagh", "Fermanagh","Londonderry","Down"),],
+    color= "darkolivegreen3",
+    fill = "darkolivegreen3"
+  ) +
+  theme_bw(base_family = "Roboto Condensed",
+           base_size = 12) +
+  coord_sf(xlim = c(-11.4, -4.6), ylim = c(51.2, 55.65), expand = FALSE) +
+  annotation_north_arrow(location = "br", which_north = "true", 
+                         pad_x = unit(0.35, "in"),
+                         pad_y = unit(0.25, "in"),
+                         style = north_arrow_fancy_orienteering) +
+  labs(x = "Longitude", y = "Latitude")+
+  annotation_scale(location = "br", width_hint = 0.4) 
 
-  
-  ggplot() +
-    geom_sf(
-      data = all_counties.sf,
-      color= "darkolivegreen3",
-      fill = "darkolivegreen3"
-    ) +
-    geom_sf(data = df_loc_sf, aes(fill = colstna,color = colstna ),shape = 23, size =2) +
-    geom_text_repel(data = df_loc_sf, 
-                     aes(x = long, y = lat, label = lab),
-                    size = 2.7
-                    # nudge_x = c(1, -1.5, 2, 2, -1), 
-                    # nudge_y = c(0.25, -0.25, 0.5, 0.5, -0.5)
-                    ) +
-    scale_color_manual(name = "Data:",
-                       labels = c("Observed", "Observed&Forecast"),
-                       values = c("blue", "black")) +
-    scale_fill_manual(name = "Data:",
-                      labels = c("Observed", "Observed&Forecast"),
-                      values = c("blue", "black")) +
-    theme_bw(base_family = "Roboto Condensed",
-             base_size = 12) +
-    coord_sf(xlim = c(-11.4, -4.6), ylim = c(51.2, 55.65), expand = FALSE) +
-    annotation_north_arrow(location = "br", which_north = "true", 
-                           pad_x = unit(0.5, "in"),
-                           pad_y = unit(0.25, "in"),
-                           style = north_arrow_fancy_orienteering) +
-    labs(x = "Longitude", y = "Latitude")+
-    annotation_scale(location = "br", width_hint = 0.4) +
-    theme(
-      strip.background = element_blank(),
-      legend.position = c(.18, .91),
-       legend.box.background = element_rect(color = "black", size = .5),
-      legend.key = element_rect(colour = "transparent", fill = "white")
-    )+
-  
-  ggsave(
-    file = here::here("out" , "map.png"),
-    width = 15,
-    height = 15,
-    units = "cm",
-    dpi = 600
+# save the plot
+ggsave(
+  file = here::here("out" , "map.png"),
+  plot = basemap,
+  width = 15,
+  height = 15,
+  units = "cm",
+  dpi = 600
+)
+
+#Note that the plotted map will be different after applying the size/resolution settings 
+#Hence it is best to take a look at it straight 
+shell.exec(here::here("out" , "map.png"))
+
+
+#---------------------- 
+#Ireland with point locations
+
+pointmap <- 
+basemap+
+  geom_sf(
+    data = df_loc_sf,
+    aes(fill = colstna, color = colstna),
+    shape = 23,
+    size = 2
+  ) +
+  #Add names of stations
+  geom_text_repel(data = df_loc_sf, 
+                  aes(x = long, y = lat, label = lab),
+                  size = 2.7
+                  # nudge_x = c(1, -1.5, 2, 2, -1), 
+                  # nudge_y = c(0.25, -0.25, 0.5, 0.5, -0.5)
+  ) +
+  #Change the 
+  scale_color_manual(name = "Data:",
+                     labels = c("Observed", "Observed&Forecast"),
+                     values = c("blue", "black")) +
+  scale_fill_manual(name = "Data:",
+                    labels = c("Observed", "Observed&Forecast"),
+                    values = c("blue", "black")) +
+  theme(
+    strip.background = element_blank(),
+    legend.position = c(.18, .91), #place position of the legend inside plotting area
+    legend.box.background = element_rect(color = "black", size = .5),
+    legend.key = element_rect(colour = "transparent", fill = "white")
   )
-  
-  shell.exec(here::here("out" , "map.png"))
-  
+
+# save the plot
+ggsave(
+  file = here::here("out" , "map_points.png"),
+  plot = pointmap,
+  width = 15,
+  height = 15,
+  units = "cm",
+  dpi = 600
+)
+
+shell.exec(here::here("out" , "map_points.png"))
+
+#---------------------- 
+#ROI map
+
+roi_map <- 
+  ggplot() +
+  geom_sf(
+    data = 
+      all_counties.sf[all_counties.sf$CountyName  != c("Tyrone","Antrim","Armagh", "Fermanagh","Londonderry","Down"),],
+    color= "black",
+    fill = "white"
+  ) +
+  theme_bw(base_family = "Roboto Condensed",
+           base_size = 12) +
+  coord_sf(xlim = c(-11.4, -4.6), ylim = c(51.2, 55.65), expand = FALSE) +
+  annotation_north_arrow(location = "br", which_north = "true", 
+                         pad_x = unit(0.35, "in"),
+                         pad_y = unit(0.25, "in"),
+                         style = north_arrow_fancy_orienteering) +
+  labs(x = "Longitude", y = "Latitude")+
+  annotation_scale(location = "br", width_hint = 0.4) 
+
+# save the plot
+ggsave(
+  file = here::here("out" , "roi_map.png"),
+  plot = roi_map,
+  width = 15,
+  height = 15,
+  units = "cm",
+  dpi = 600
+)
+
+shell.exec(here::here("out" , "roi_map.png"))
