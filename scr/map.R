@@ -59,20 +59,27 @@ st_crs(df_loc_sf) <-
 
 basemap <- 
 ggplot() +
+  # Plot borders (shapefile)
   geom_sf(
     data = 
       all_counties.sf[all_counties.sf$CountyName  != c("Tyrone","Antrim","Armagh", "Fermanagh","Londonderry","Down"),],
     color= "darkolivegreen3",
     fill = "darkolivegreen3"
   ) +
+  #Set the theme
   theme_bw(base_family = "Roboto Condensed",
-           base_size = 12) +
+           base_size = 12 #Change the overall font size 
+           ) +
+  #limit the plotting area
   coord_sf(xlim = c(-11.4, -4.6), ylim = c(51.2, 55.65), expand = FALSE) +
+  # Define names for labs
+  labs(x = "Longitude", y = "Latitude")+
+  #add fancy anotation
   annotation_north_arrow(location = "br", which_north = "true", 
                          pad_x = unit(0.35, "in"),
                          pad_y = unit(0.25, "in"),
                          style = north_arrow_fancy_orienteering) +
-  labs(x = "Longitude", y = "Latitude")+
+  
   annotation_scale(location = "br", width_hint = 0.4) 
 
 # save the plot
@@ -108,10 +115,11 @@ basemap+
                   # nudge_x = c(1, -1.5, 2, 2, -1), 
                   # nudge_y = c(0.25, -0.25, 0.5, 0.5, -0.5)
   ) +
-  #Change the 
+  #Change the border color. This section can be removed in single color of point is ok
   scale_color_manual(name = "Data:",
                      labels = c("Observed", "Observed&Forecast"),
                      values = c("blue", "black")) +
+  #change the fill manually
   scale_fill_manual(name = "Data:",
                     labels = c("Observed", "Observed&Forecast"),
                     values = c("blue", "black")) +
