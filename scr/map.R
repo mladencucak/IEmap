@@ -46,6 +46,10 @@ load(here::here("dat", "All_Ireland.RData"))#shape file for irish counties
 df_loc <- 
   read.csv( here::here("dat", "stations_final.csv"))
 
+df_loc$lab <- 
+  gsub("_", " (", df_loc$lab) %>% 
+    paste0(., ")")
+
 #Convert to simple features object
 df_loc_sf <- 
   df_loc %>% 
@@ -57,14 +61,20 @@ df_loc_sf <-
 st_crs(df_loc_sf) <- 
   st_crs(all_counties.sf)
 
-basemap <- 
+ # basemap <- 
 ggplot() +
   # Plot borders (shapefile)
   geom_sf(
     data = 
       all_counties.sf[all_counties.sf$CountyName  != c("Tyrone","Antrim","Armagh", "Fermanagh","Londonderry","Down"),],
-    color= "darkolivegreen3",
-    fill = "darkolivegreen3"
+    color= "#81E8C2",
+    fill = "#81E8C2"
+  ) +
+  geom_sf(
+    data = 
+      all_counties.sf[all_counties.sf$CountyName  == c("Tyrone","Antrim","Armagh", "Fermanagh","Londonderry","Down"),],
+    color= "#F6F6B2",
+    fill = "#F6F6B2"
   ) +
   #Set the theme
   theme_bw(base_family = "Roboto Condensed",
@@ -100,7 +110,7 @@ shell.exec(here::here("out" , "map.png"))
 #---------------------- 
 #Ireland with point locations
 
-pointmap <- 
+ pointmap <- 
 basemap+
   geom_sf(
     data = df_loc_sf,
@@ -117,15 +127,15 @@ basemap+
   ) +
   #Change the border color. This section can be removed in single color of point is ok
   scale_color_manual(name = "Data:",
-                     labels = c("Observed", "Observed&Forecast"),
-                     values = c("blue", "black")) +
+                     labels = c("Observed", "Observed&\nForecast"),
+                     values = c( "black","blue")) +
   #change the fill manually
   scale_fill_manual(name = "Data:",
-                    labels = c("Observed", "Observed&Forecast"),
-                    values = c("blue", "black")) +
+                    labels = c("Observed", "Observed&\nForecast"),
+                    values = c("black","blue")) +
   theme(
     strip.background = element_blank(),
-    legend.position = c(.18, .91), #place position of the legend inside plotting area
+    legend.position = c(.16, .90), #place position of the legend inside plotting area
     legend.box.background = element_rect(color = "black", size = .5),
     legend.key = element_rect(colour = "transparent", fill = "white")
   )
